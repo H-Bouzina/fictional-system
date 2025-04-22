@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Andra Sidan</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff4e6;
+      padding: 2em;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5em;
+      color: #b55d0b;
+    }
+    .box {
+      width: 150px;
+      height: 150px;
+      background-color: #ffa94d;
+      margin: 2em auto;
+      border-radius: 20px;
+      animation: bounce 2s infinite;
+      transition: background-color 0.3s;
+      cursor: pointer;
+    }
+    .box:hover {
+      background-color: #ff922b;
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-30px);
+      }
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 2em;
+      padding: 0.8em 1.5em;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    a:hover {
+      background-color: #1e7e34;
+    }
+  </style>
+</head>
+<body>
+  <h1>Du är på den andra sidan!</h1>
+  <p>Klicka på rutan nedan – den studsar!</p>
+  <div class="box" onclick="alert('Hej där! Du klickade på den studsande rutan.')"></div>
+  <a href="index.html">Tillbaka till startsidan</a>
+</body>
+</html>

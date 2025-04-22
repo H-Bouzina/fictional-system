@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spektrallinjer</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #canvas {
+      display: block;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+      background-color: black;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 16px;
+      margin: 5px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      color: white;
+    }
+    th, td {
+      border: 1px solid white;
+      padding: 8px 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spektrallinjer</h1>
+  <input type="number" id="wavelengthInput" placeholder="Ange våglängd (nm)" min="380" max="700">
+  <button onclick="addWavelength()">Lägg till</button>
+  <button onclick="drawSpectrum()">Visa spektrum</button>
+  <button onclick="clearSpectrum()">Rensa</button>
+  <p id="status"></p>
+  <canvas id="canvas" width="800" height="120"></canvas>
+
+  <table id="wavelengthTable">
+    <thead>
+      <tr><th>#</th><th>Våglängd (nm)</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const wavelengths = [];
+
+    function wavelengthToRGB(wavelength) {
+      let r = 0, g = 0, b = 0;
+      if (wavelength >= 380 && wavelength < 440) {
+        r = -(wavelength - 440) / (440 - 380);
+        g = 0;
+        b = 1;
+      } else if (wavelength < 490) {
+        r = 0;
+        g = (wavelength - 440) / (490 - 440);
+        b = 1;
+      } else if (wavelength < 510) {
+        r = 0;
+        g = 1;
+        b = -(wavelength - 510) / (510 - 490);
+      } else if (wavelength < 580) {
+        r = (wavelength - 510) / (580 - 510);
+        g = 1;
+        b = 0;
+      } else if (wavelength < 645) {
+        r = 1;
+        g = -(wavelength - 645) / (645 - 580);
+        b = 0;
+      } else if (wavelength <= 700) {
+        r = 1;
+        g = 0;
+        b = 0;
+      }
+      return `rgb(${Math.round(r*255)}, ${Math.round(g*255)}, ${Math.round(b*255)})`;
+    }
+
+    function updateTable() {
+      const tbody = document.getElementById("wavelengthTable").querySelector("tbody");
+      tbody.innerHTML = "";
+      wavelengths.forEach((wl, i) => {
+        const row = document.createElement("tr");
+        const cellIndex = document.createElement("td");
+        const cellValue = document.createElement("td");
+        cellIndex.textContent = i + 1;
+        cellValue.textContent = wl;
+        row.appendChild(cellIndex);
+        row.appendChild(cellValue);
+        tbody.appendChild(row);
+      });
+    }
+
+    function addWavelength() {
+      const input = document.getElementById("wavelengthInput");
+      const value = parseFloat(input.value);
+      if (!isNaN(value) && value >= 380 && value <= 700) {
+        wavelengths.push(value);
+        document.getElementById("status").textContent = `Lagt till: ${value} nm`;
+        input.value = '';
+        updateTable();
+      } else {
+        document.getElementById("status").textContent = "Ange ett giltigt värde mellan 380 och 700 nm.";
+      }
+    }
+
+    function drawSpectrum() {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Rita gradering
+      ctx.strokeStyle = 'white';
+      ctx.fillStyle = 'white';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      for (let nm = 380; nm <= 700; nm += 20) {
+        const x = ((nm - 380) / (700 - 380)) * canvas.width;
+        ctx.beginPath();
+        ctx.moveTo(x, canvas.height - 25);
+        ctx.lineTo(x, canvas.height - 20);
+        ctx.stroke();
+        ctx.fillText(nm.toString(), x, canvas.height - 5);
+      }
+
+      wavelengths.sort((a, b) => a - b);
+      wavelengths.forEach(wavelength => {
+        const x = ((wavelength - 380) / (700 - 380)) * canvas.width;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height - 30);
+        ctx.strokeStyle = wavelengthToRGB(wavelength);
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      });
+    }
+
+    function clearSpectrum() {
+      wavelengths.length = 0;
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById("status").textContent = "Spektrum rensat.";
+      updateTable();
+    }
+  </script>
+</body>
+</html>

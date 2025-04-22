@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Bygg en mening</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e6f7ff;
+      text-align: center;
+      padding: 2em;
+    }
+
+    h1 {
+      color: #005b99;
+    }
+
+    .word-bank, .drop-zone {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 1em auto;
+      min-height: 60px;
+      padding: 10px;
+      border: 2px dashed #aaa;
+      background-color: #f0f8ff;
+      border-radius: 10px;
+    }
+
+    .word {
+      padding: 10px 15px;
+      background-color: #fff;
+      border: 1px solid #aaa;
+      border-radius: 8px;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .word.dragging {
+      opacity: 0.5;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 8px;
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bygg en mening</h1>
+  <p>Dra orden för att bilda meningen: <em>"Jag tycker om fysik"</em></p>
+
+  <div class="word-bank" id="wordBank">
+    <div class="word" draggable="true">fysik</div>
+    <div class="word" draggable="true">om</div>
+    <div class="word" draggable="true">tycker</div>
+    <div class="word" draggable="true">Jag</div>
+  </div>
+
+  <h3>Dra orden hit i rätt ordning:</h3>
+  <div class="drop-zone" id="dropZone"></div>
+
+  <button onclick="checkSentence()">Kontrollera</button>
+  <div id="result"></div>
+
+  <script>
+    const words = document.querySelectorAll('.word');
+    const wordBank = document.getElementById('wordBank');
+    const dropZone = document.getElementById('dropZone');
+
+    words.forEach(word => {
+      word.addEventListener('dragstart', (e) => {
+        word.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', word.textContent);
+      });
+      word.addEventListener('dragend', () => word.classList.remove('dragging'));
+    });
+
+    [wordBank, dropZone].forEach(zone => {
+      zone.addEventListener('dragover', e => {
+        e.preventDefault();
+      });
+
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        const draggedText = e.dataTransfer.getData('text/plain');
+        const draggingWord = Array.from(words).find(w => w.textContent === draggedText);
+        if (draggingWord && !zone.contains(draggingWord)) {
+          zone.appendChild(draggingWord);
+        } else if (draggingWord) {
+          zone.appendChild(draggingWord); // allow moving between zones
+        }
+      });
+    });
+
+    function checkSentence() {
+      const correct = ["Jag", "tycker", "om", "fysik"];
+      const userWords = Array.from(dropZone.children).map(el => el.textContent);
+      const result = document.getElementById('result');
+
+      if (userWords.length !== correct.length) {
+        result.textContent = "Du har inte använt alla ord.";
+        result.style.color = "orange";
+        return;
+      }
+
+      if (userWords.join(" ") === correct.join(" ")) {
+        result.textContent = "Korrekt! 🎉";
+        result.style.color = "green";
+      } else {
+        result.textContent = "Inte riktigt rätt. Försök igen!";
+        result.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>

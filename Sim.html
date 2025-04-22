@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Fysiksimulering: Fallande boll</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #f5faff;
+      text-align: center;
+      font-family: sans-serif;
+    }
+
+    h1 {
+      margin: 1em;
+      color: #003366;
+    }
+
+    canvas {
+      border: 2px solid #003366;
+      background-color: #e0f7ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulering: Fallande boll med gravitation</h1>
+  <canvas id="canvas" width="400" height="300"></canvas>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Bollens egenskaper
+    let x = canvas.width / 2;
+    let y = 50;
+    let radius = 20;
+    let vy = 0; // vertikal hastighet
+    let gravity = 0.5;
+    let bounce = 0.7;
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#0077cc";
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Tillämpa gravitation
+      vy += gravity;
+      y += vy;
+
+      // Studs mot marken
+      if (y + radius > canvas.height) {
+        y = canvas.height - radius;
+        vy = -vy * bounce;
+      }
+
+      drawBall();
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</body>
+</html>

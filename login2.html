@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz Prototyp med Firebase</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
+    .hidden { display: none; }
+    button { margin-top: 10px; }
+  </style>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxq8Kk-Be3tr6lIV1IvRXr3BZI-SF9Hpo",
+      authDomain: "test-website-550d5.firebaseapp.com",
+      projectId: "test-website-550d5",
+      storageBucket: "test-website-550d5.firebasestorage.app",
+      messagingSenderId: "581729168997",
+      appId: "1:581729168997:web:de30438443005159bba08c",
+      measurementId: "G-9GNK4LSB7P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.firebaseData = { db, addDoc, collection, getDocs };
+  </script>
+</head>
+<body>
+  <h1>Välkommen till Quizet</h1>
+
+  <div id="login">
+    <input id="username" placeholder="Användarnamn" />
+    <button onclick="login()">Logga in</button>
+  </div>
+
+  <div id="quiz" class="hidden">
+    <h2>Quiz</h2>
+    <form id="quizForm">
+      <p>1. Vad är 2 + 2?</p>
+      <input type="radio" name="q1" value="0" />3<br />
+      <input type="radio" name="q1" value="1" />4<br />
+
+      <p>2. Vad är huvudstaden i Sverige?</p>
+      <input type="radio" name="q2" value="1" />Stockholm<br />
+      <input type="radio" name="q2" value="0" />Göteborg<br />
+
+      <p>3. Vilket ämne symboliseras av H2O?</p>
+      <input type="radio" name="q3" value="1" />Vatten<br />
+      <input type="radio" name="q3" value="0" />Koldioxid<br />
+
+      <button type="submit">Skicka in</button>
+    </form>
+    <div id="score"></div>
+    <button onclick="logout()">Tillbaka till inloggning</button>
+  </div>
+
+  <div id="admin" class="hidden">
+    <h2>Adminsida</h2>
+    <div id="results"></div>
+    <button onclick="logout()">Logga ut</button>
+  </div>
+
+  <script type="module">
+    import { getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const loginDiv = document.getElementById("login");
+    const quizDiv = document.getElementById("quiz");
+    const adminDiv = document.getElementById("admin");
+    const resultsDiv = document.getElementById("results");
+    let currentUser = "";
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const allowedUsers = ["cat", "zoro", "admin"];
+      if (!username) {
+        return alert("Skriv ett användarnamn.");
+      }
+      if (!allowedUsers.includes(username.toLowerCase())) {
+        return alert("Fel användarnamn. Endast Cat, Zoro eller admin kan logga in.");
+      }
+      currentUser = username;
+
+      if (username.toLowerCase() === "admin") {
+        showAdmin();
+      } else {
+        loginDiv.classList.add("hidden");
+        quizDiv.classList.remove("hidden");
+      }
+    }
+
+    function logout() {
+      currentUser = "";
+      quizDiv.classList.add("hidden");
+      adminDiv.classList.add("hidden");
+      loginDiv.classList.remove("hidden");
+      document.getElementById("username").value = "";
+      document.getElementById("score").innerText = "";
+      document.getElementById("quizForm").reset();
+    }
+
+    document.getElementById("quizForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      let score = 0;
+      const answers = document.querySelectorAll("input[type=radio]:checked");
+      answers.forEach((a) => (score += parseInt(a.value)));
+      document.getElementById("score").innerText = `Du fick ${score}/3 poäng.`;
+      await sparaResultat(currentUser, score);
+    });
+
+    async function sparaResultat(user, score) {
+      const { db, addDoc, collection } = window.firebaseData;
+      await addDoc(collection(db, "quizresultat"), {
+        anvandare: user,
+        poang: score,
+        tid: new Date(),
+      });
+    }
+
+    async function showAdmin() {
+      loginDiv.classList.add("hidden");
+      adminDiv.classList.remove("hidden");
+
+      const { db, getDocs, collection } = window.firebaseData;
+      const querySnapshot = await getDocs(collection(db, "quizresultat"));
+      let output = "<ul>";
+      querySnapshot.forEach((doc) => {
+        const d = doc.data();
+        const tid = new Date(d.tid.seconds * 1000).toLocaleString();
+        output += `<li>${d.anvandare}: ${d.poang}/3 - ${tid}</li>`;
+      });
+      output += "</ul>";
+      resultsDiv.innerHTML = output;
+    }
+
+    window.login = login;
+    window.logout = logout;
+  </script>
+</body>
+</html>

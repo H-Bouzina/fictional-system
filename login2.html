@@ -1,143 +1,329 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Quiz Prototyp med Firebase</title>
-  <style>
-    body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
-    .hidden { display: none; }
-    button { margin-top: 10px; }
-  </style>
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBxq8Kk-Be3tr6lIV1IvRXr3BZI-SF9Hpo",
-      authDomain: "test-website-550d5.firebaseapp.com",
-      projectId: "test-website-550d5",
-      storageBucket: "test-website-550d5.firebasestorage.app",
-      messagingSenderId: "581729168997",
-      appId: "1:581729168997:web:de30438443005159bba08c",
-      measurementId: "G-9GNK4LSB7P"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    window.firebaseData = { db, addDoc, collection, getDocs };
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Knowledge Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .user-info {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .user-info input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .question h3 {
+            margin-top: 0;
+            color: #444;
+        }
+        .options {
+            margin-top: 10px;
+        }
+        .option {
+            margin: 8px 0;
+        }
+        .option input {
+            margin-right: 10px;
+        }
+        .option label {
+            cursor: pointer;
+        }
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
-  <h1>Välkommen till Quizet</h1>
+    <div class="container">
+        <h1>🧠 General Knowledge Quiz</h1>
+        
+        <form id="quizForm">
+            <div class="user-info">
+                <label for="userName"><strong>Your Name:</strong></label>
+                <input type="text" id="userName" name="userName" required>
+                
+                <label for="userEmail" style="margin-top: 15px; display: block;"><strong>Email (optional):</strong></label>
+                <input type="email" id="userEmail" name="userEmail">
+            </div>
 
-  <div id="login">
-    <input id="username" placeholder="Användarnamn" />
-    <button onclick="login()">Logga in</button>
-  </div>
+            <div class="question">
+                <h3>1. What is the capital of France?</h3>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" id="q1a" name="q1" value="London">
+                        <label for="q1a">London</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q1b" name="q1" value="Berlin">
+                        <label for="q1b">Berlin</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q1c" name="q1" value="Paris">
+                        <label for="q1c">Paris</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q1d" name="q1" value="Madrid">
+                        <label for="q1d">Madrid</label>
+                    </div>
+                </div>
+            </div>
 
-  <div id="quiz" class="hidden">
-    <h2>Quiz</h2>
-    <form id="quizForm">
-      <p>1. Vad är 2 + 2?</p>
-      <input type="radio" name="q1" value="0" />3<br />
-      <input type="radio" name="q1" value="1" />4<br />
+            <div class="question">
+                <h3>2. Which planet is known as the Red Planet?</h3>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" id="q2a" name="q2" value="Venus">
+                        <label for="q2a">Venus</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q2b" name="q2" value="Mars">
+                        <label for="q2b">Mars</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q2c" name="q2" value="Jupiter">
+                        <label for="q2c">Jupiter</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q2d" name="q2" value="Saturn">
+                        <label for="q2d">Saturn</label>
+                    </div>
+                </div>
+            </div>
 
-      <p>2. Vad är huvudstaden i Sverige?</p>
-      <input type="radio" name="q2" value="1" />Stockholm<br />
-      <input type="radio" name="q2" value="0" />Göteborg<br />
+            <div class="question">
+                <h3>3. What is the largest mammal in the world?</h3>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" id="q3a" name="q3" value="Elephant">
+                        <label for="q3a">African Elephant</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q3b" name="q3" value="Blue Whale">
+                        <label for="q3b">Blue Whale</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q3c" name="q3" value="Giraffe">
+                        <label for="q3c">Giraffe</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q3d" name="q3" value="Hippopotamus">
+                        <label for="q3d">Hippopotamus</label>
+                    </div>
+                </div>
+            </div>
 
-      <p>3. Vilket ämne symboliseras av H2O?</p>
-      <input type="radio" name="q3" value="1" />Vatten<br />
-      <input type="radio" name="q3" value="0" />Koldioxid<br />
+            <div class="question">
+                <h3>4. In which year did World War II end?</h3>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" id="q4a" name="q4" value="1944">
+                        <label for="q4a">1944</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q4b" name="q4" value="1945">
+                        <label for="q4b">1945</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q4c" name="q4" value="1946">
+                        <label for="q4c">1946</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q4d" name="q4" value="1947">
+                        <label for="q4d">1947</label>
+                    </div>
+                </div>
+            </div>
 
-      <button type="submit">Skicka in</button>
-    </form>
-    <div id="score"></div>
-    <button onclick="logout()">Tillbaka till inloggning</button>
-  </div>
+            <div class="question">
+                <h3>5. Which element has the chemical symbol 'O'?</h3>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" id="q5a" name="q5" value="Gold">
+                        <label for="q5a">Gold</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q5b" name="q5" value="Oxygen">
+                        <label for="q5b">Oxygen</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q5c" name="q5" value="Silver">
+                        <label for="q5c">Silver</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="q5d" name="q5" value="Iron">
+                        <label for="q5d">Iron</label>
+                    </div>
+                </div>
+            </div>
 
-  <div id="admin" class="hidden">
-    <h2>Adminsida</h2>
-    <div id="results"></div>
-    <button onclick="logout()">Logga ut</button>
-  </div>
+            <button type="submit" class="submit-btn" id="submitBtn">Submit Quiz</button>
+        </form>
 
-  <script type="module">
-    import { getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
 
-    const loginDiv = document.getElementById("login");
-    const quizDiv = document.getElementById("quiz");
-    const adminDiv = document.getElementById("admin");
-    const resultsDiv = document.getElementById("results");
-    let currentUser = "";
+    <script>
+        // Correct answers
+        const correctAnswers = {
+            q1: 'Paris',
+            q2: 'Mars',
+            q3: 'Blue Whale',
+            q4: '1945',
+            q5: 'Oxygen'
+        };
 
-    function login() {
-      const username = document.getElementById("username").value.trim();
-      const allowedUsers = ["cat", "zoro", "admin"];
-      if (!username) {
-        return alert("Skriv ett användarnamn.");
-      }
-      if (!allowedUsers.includes(username.toLowerCase())) {
-        return alert("Fel användarnamn. Endast Cat, Zoro eller admin kan logga in.");
-      }
-      currentUser = username;
-
-      if (username.toLowerCase() === "admin") {
-        showAdmin();
-      } else {
-        loginDiv.classList.add("hidden");
-        quizDiv.classList.remove("hidden");
-      }
-    }
-
-    function logout() {
-      currentUser = "";
-      quizDiv.classList.add("hidden");
-      adminDiv.classList.add("hidden");
-      loginDiv.classList.remove("hidden");
-      document.getElementById("username").value = "";
-      document.getElementById("score").innerText = "";
-      document.getElementById("quizForm").reset();
-    }
-
-    document.getElementById("quizForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      let score = 0;
-      const answers = document.querySelectorAll("input[type=radio]:checked");
-      answers.forEach((a) => (score += parseInt(a.value)));
-      document.getElementById("score").innerText = `Du fick ${score}/3 poäng.`;
-      await sparaResultat(currentUser, score);
-    });
-
-    async function sparaResultat(user, score) {
-      const { db, addDoc, collection } = window.firebaseData;
-      await addDoc(collection(db, "quizresultat"), {
-        anvandare: user,
-        poang: score,
-        tid: new Date(),
-      });
-    }
-
-    async function showAdmin() {
-      loginDiv.classList.add("hidden");
-      adminDiv.classList.remove("hidden");
-
-      const { db, getDocs, collection } = window.firebaseData;
-      const querySnapshot = await getDocs(collection(db, "quizresultat"));
-      let output = "<ul>";
-      querySnapshot.forEach((doc) => {
-        const d = doc.data();
-        const tid = new Date(d.tid.seconds * 1000).toLocaleString();
-        output += `<li>${d.anvandare}: ${d.poang}/3 - ${tid}</li>`;
-      });
-      output += "</ul>";
-      resultsDiv.innerHTML = output;
-    }
-
-    window.login = login;
-    window.logout = logout;
-  </script>
+        document.getElementById('quizForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            // Get form data
+            const formData = new FormData(this);
+            const userName = formData.get('userName');
+            const userEmail = formData.get('userEmail') || 'Not provided';
+            
+            // Calculate score
+            let score = 0;
+            const totalQuestions = 5;
+            const answers = {};
+            
+            for (let i = 1; i <= totalQuestions; i++) {
+                const answer = formData.get(`q${i}`);
+                answers[`q${i}`] = answer || 'Not answered';
+                if (answer === correctAnswers[`q${i}`]) {
+                    score++;
+                }
+            }
+            
+            const percentage = Math.round((score / totalQuestions) * 100);
+            
+            // Prepare data for Google Sheets
+            const submissionData = {
+                name: userName,
+                email: userEmail,
+                score: score,
+                totalQuestions: totalQuestions,
+                percentage: percentage,
+                q1Answer: answers.q1,
+                q2Answer: answers.q2,
+                q3Answer: answers.q3,
+                q4Answer: answers.q4,
+                q5Answer: answers.q5,
+                timestamp: new Date().toISOString()
+            };
+            
+            // TODO: Replace with your Google Apps Script URL
+            const scriptURL = https://script.google.com/macros/s/AKfycbynvhRnwLqBLM_IbUOADQPszHOn7Wx3EFmh_mbakRrHJFVJR3Vv2aEn93k-rVw4G5AC4A/exec;
+            
+            // Send to Google Sheets using FormData (more reliable)
+            const formDataToSend = new FormData();
+            for (const key in submissionData) {
+                formDataToSend.append(key, submissionData[key]);
+            }
+            
+            fetch(scriptURL, {
+                method: 'POST',
+                body: formDataToSend
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Quiz submitted successfully!<br>
+                        Your score: ${score}/${totalQuestions} (${percentage}%)<br>
+                        Thank you, ${userName}!
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+                
+                // Reset form
+                document.getElementById('quizForm').reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ There was an error submitting your quiz. Please try again.
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+            })
+            .finally(() => {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Quiz';
+            });
+        });
+    </script>
 </body>
 </html>

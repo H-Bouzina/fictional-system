@@ -1,46 +1,443 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <title>Min Hemsida</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #dfe9f3, #ffffff);
-      padding: 2em;
-      text-align: center;
-    }
-    h1 {
-      font-size: 3em;
-      color: #333;
-    }
-    p {
-      font-size: 1.2em;
-      color: #555;
-    }
-    button {
-      padding: 1em 2em;
-      font-size: 1.2em;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      transition: transform 0.2s, background-color 0.3s;
-    }
-    button:hover {
-      background-color: #0056b3;
-      transform: scale(1.05);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://unpkg.com/mathlive"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX för matematisk rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMckMnHsn+8CEMEtEaFrpiVeQSvZOygtqrDaHASS6dCIiMVAF" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctMQanyES51" crossorigin="anonymous"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        iframe {
+            width: 100%;
+            min-height: 250px; 
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        iframe.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .facit-container {
+            display: none; /* Hidden by default */
+        }
+        /* KaTeX styling */
+        .katex { font-size: 1.1em; }
+    </style>
 </head>
-<body>
-  <h1>Välkommen!</h1>
-  <p>Klicka på knappen för att gå vidare till nästa sida.</p>
-  <button onclick="window.location.href='Spektrallinjer.html'">Spaktrallinjer</button>
-  <button onclick="window.location.href='sida2.html'">Gå till nästa sida</button>
-  <button onclick="window.location.href='sida3.html'">Gå till sida 3</button>
-  <button onclick="window.location.href='login2.html'">Login</button>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Logged Out View -->
+        <div id="loggedOutView" class="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8 mt-12">
+            <form id="loginForm">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Logga in</h2>
+                <div class="mb-4"><label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="loginEmail" required class="mt-1 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg"></div>
+                <div class="mb-4"><label for="loginPassword" class="block text-sm font-medium text-gray-700">Lösenord</label><input type="password" id="loginPassword" required class="mt-1 w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg"></div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 mt-2">Logga in</button>
+            </form>
+            <div id="authMessageArea" class="mt-6 text-center text-sm font-medium text-red-600"></div>
+        </div>
+
+        <!-- Logged In View -->
+        <div id="loggedInView" class="hidden max-w-4xl mx-auto">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h1 id="welcomeMessage" class="text-3xl font-bold text-gray-800">Welcome!</h1>
+                    <p id="pageSubtitle" class="text-gray-600">Please choose a quiz to start.</p>
+                </div>
+                <button id="logoutButton" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 text-sm flex-shrink-0">Logout</button>
+            </div>
+            
+            <div class="mb-6 border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button id="quizzesTab" class="border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Quizzes</button>
+                    <button id="progressTab" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">My Progress</button>
+                </nav>
+            </div>
+
+            <div id="contentContainer" class="bg-white rounded-xl shadow-lg p-8"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, addDoc, serverTimestamp, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+			apiKey: "AIzaSyDKXW520Qeis96HzAZ0sP50_PXBkicUpas",
+			authDomain: "bouzinaspaced.firebaseapp.com",
+			projectId: "bouzinaspaced",
+			storageBucket: "bouzinaspaced.appspot.com",
+			messagingSenderId: "275316796553",
+			appId: "1:275316796553:web:ff09959117e62a657daa58",
+			measurementId: "G-6CE74HQDW1"
+		};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const loggedInView = document.getElementById('loggedInView');
+        const loggedOutView = document.getElementById('loggedOutView');
+        const contentContainer = document.getElementById('contentContainer');
+        const loginForm = document.getElementById('loginForm');
+        const logoutButton = document.getElementById('logoutButton');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const authMessageArea = document.getElementById('authMessageArea');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+        const quizzesTab = document.getElementById('quizzesTab');
+        const progressTab = document.getElementById('progressTab');
+        
+        let currentUser = null;
+        let activitiesMap = new Map(); // Cache for activity data
+
+        // Pre-fetch all activities once on load
+        async function cacheActivities() {
+            const activitiesSnapshot = await getDocs(collection(db, "activities"));
+            activitiesSnapshot.forEach(doc => {
+                activitiesMap.set(doc.id, doc.data());
+            });
+        }
+
+        onAuthStateChanged(auth, async user => {
+            currentUser = user;
+            if (user) {
+                await cacheActivities(); // Load activities before showing content
+                loggedInView.classList.remove('hidden');
+                loggedOutView.classList.add('hidden');
+                welcomeMessage.textContent = `Välkommen, ${user.displayName || user.email}!`;
+                showQuizList();
+            } else {
+                loggedInView.classList.add('hidden');
+                loggedOutView.classList.remove('hidden');
+            }
+        });
+        
+        quizzesTab.addEventListener('click', () => {
+            setActiveTab(quizzesTab);
+            pageSubtitle.textContent = 'Välj ett prov att starta.';
+            showQuizList();
+        });
+
+        progressTab.addEventListener('click', () => {
+            setActiveTab(progressTab);
+            pageSubtitle.textContent = 'Se dina framsteg och hitta personliga övningsprov.';
+            showMyProgress();
+        });
+        
+        function setActiveTab(activeTab) {
+            [quizzesTab, progressTab].forEach(tab => {
+                tab.classList.remove('border-indigo-500', 'text-indigo-600');
+                tab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+            activeTab.classList.add('border-indigo-500', 'text-indigo-600');
+            activeTab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+        }
+        
+        // --- UPDATED showMyProgress function ---
+        async function showMyProgress() {
+            contentContainer.innerHTML = '<p class="text-gray-500">Laddar dina framsteg...</p>';
+            
+            const profileRef = doc(db, "studentProfiles", currentUser.uid);
+            const profileDoc = await getDoc(profileRef);
+            
+            let progressHtml = '<p>Inga resultat registrerade ännu.</p>';
+
+            if (profileDoc.exists() && profileDoc.data().activityData) {
+                const studentActivityData = profileDoc.data().activityData;
+                
+                // Aggregate success rates by tag
+                const progressByTag = {}; // { tagName: { totalSuccessRate: 0, count: 0, totalAttempts: 0 } }
+
+                for (const activityId in studentActivityData) {
+                    const stats = studentActivityData[activityId];
+                    const activityInfo = activitiesMap.get(activityId);
+
+                    if (activityInfo && activityInfo.tags && stats.totalAttempts > 0) {
+                        const successRate = stats.correctAttempts / stats.totalAttempts;
+                        
+                        activityInfo.tags.forEach(tag => {
+                            if (!progressByTag[tag]) {
+                                progressByTag[tag] = { totalSuccessRate: 0, activityCount: 0, totalAttempts: 0 };
+                            }
+                            progressByTag[tag].totalSuccessRate += successRate;
+                            progressByTag[tag].activityCount += 1;
+                            progressByTag[tag].totalAttempts += stats.totalAttempts;
+                        });
+                    }
+                }
+
+                if (Object.keys(progressByTag).length > 0) {
+                    progressHtml = Object.entries(progressByTag).map(([tag, data]) => {
+                        const averageSuccessRate = data.totalSuccessRate / data.activityCount;
+                        const percentage = averageSuccessRate * 100;
+
+                        let barColorClass = 'bg-green-500';
+                        if (averageSuccessRate < 0.4) { // Less than 40% success
+                            barColorClass = 'bg-red-500';
+                        } else if (averageSuccessRate < 0.8) { // Less than 80% success
+                            barColorClass = 'bg-yellow-500';
+                        }
+
+                        return `
+                            <div class="py-4 border-b last:border-b-0">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-lg font-medium text-gray-800 capitalize">${tag}</span>
+                                    <div class="text-right">
+                                        <span class="text-lg font-bold text-gray-800">${percentage.toFixed(0)}%</span>
+                                        <span class="text-sm text-gray-500"> framgång (${data.activityCount} unika frågor)</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                    <div class="${barColorClass} h-4 rounded-full" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+            
+            contentContainer.innerHTML = `
+                 <h2 class="text-2xl font-bold text-gray-900 mb-4">Dina framsteg per ämne</h2>
+                 <div class="space-y-2 mb-10">${progressHtml}</div>
+                 <div id="tailoredQuizzesContainer" class="mt-10"></div>
+            `;
+            loadTailoredQuizzes();
+        }
+        
+        async function showQuizList(collectionName = "quizzes") {
+            contentContainer.innerHTML = '<p class="text-gray-500">Laddar tillgängliga prov...</p>';
+            const q = query(collection(db, collectionName), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                contentContainer.innerHTML = `<p class="font-semibold">Inga prov finns tillgängliga i denna sektion.</p>`;
+                if (collectionName === "tailoredQuizzes") {
+                     contentContainer.innerHTML += `<p class="mt-4"><button id="backToProgressBtn" class="text-sm text-indigo-600 hover:underline">&larr; Tillbaka till Mina framsteg</button></p>`;
+                     document.getElementById('backToProgressBtn').addEventListener('click', showMyProgress);
+                }
+                return;
+            }
+
+            const quizListHtml = querySnapshot.docs.map(doc => {
+                const quiz = doc.data();
+                if (collectionName === "tailoredQuizzes" && quiz.studentUid !== currentUser.uid) {
+                    return '';
+                }
+                return `<div class="p-4 border-b hover:bg-gray-50 flex justify-between items-center"><div><h3 class="text-lg font-semibold text-gray-800">${quiz.title}</h3><p class="text-sm text-gray-500">${quiz.activityIds.length} frågor</p></div><button class="take-quiz-btn bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg" data-quiz-id="${doc.id}" data-collection="${collectionName}">Starta Prov</button></div>`;
+            }).join('');
+
+            contentContainer.innerHTML = `<h2 class="text-2xl font-bold text-gray-900 mb-4">${collectionName === 'quizzes' ? 'Tillgängliga Prov' : 'Dina övningsprov'}</h2><div class="space-y-2">${quizListHtml}</div>`;
+
+            if (collectionName === "tailoredQuizzes") {
+                contentContainer.innerHTML += `<p class="mt-6"><button id="backToProgressBtn" class="text-sm text-indigo-600 hover:underline">&larr; Tillbaka till Mina framsteg</button></p>`;
+                document.getElementById('backToProgressBtn').addEventListener('click', showMyProgress);
+            }
+
+            document.querySelectorAll('.take-quiz-btn').forEach(button => {
+                button.addEventListener('click', (e) => loadAndDisplayQuiz(e.target.dataset.quizId, e.target.dataset.collection));
+            });
+        }
+
+        async function loadAndDisplayQuiz(quizId, collectionName) {
+            contentContainer.innerHTML = '<p class="text-gray-500">Laddar prov...</p>';
+            const quizDoc = await getDoc(doc(db, collectionName, quizId));
+            if (!quizDoc.exists()) { contentContainer.innerHTML = '<p class="text-red-500">Fel: Provet hittades inte.</p>'; return; }
+            const quiz = { id: quizDoc.id, ...quizDoc.data() };
+            
+            const formContent = await Promise.all(quiz.activityIds.map(async (activityId, index) => {
+                const activity = activitiesMap.get(activityId) || { title: "Okänd fråga" };
+                
+                let activityHtml = `<div class="mb-8 pb-8 border-b last:border-b-0">`;
+
+                if (activity.type === 'simulation') {
+                    activityHtml += `
+                        <h3 class="block text-xl font-semibold text-gray-800 mb-4">Aktivitet ${index + 1}: ${activity.title}</h3>
+                        <iframe src="${activity.content}" data-activity-id="${activityId}" scrolling="no"></iframe>
+                        <textarea name="answer" data-activity-id="${activityId}" class="hidden"></textarea>
+                    `;
+                } else if (activity.type === 'tutorial') {
+                    activityHtml += `
+                        <h3 class="block text-xl font-semibold text-gray-800 mb-4">Genomgång: ${activity.title}</h3>
+                        <iframe src="${activity.content}" data-activity-id="${activityId}" scrolling="no"></iframe>
+                    `;
+                } else { // simple_question
+                    activityHtml += `
+                        <label class="block text-lg font-semibold text-gray-800 mb-2">Fråga ${index + 1}: ${activity.title}</label>
+                        <p class="text-gray-600 mb-3">${activity.content}</p>
+                        <textarea name="answer" data-activity-id="${activityId}" rows="4" required class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg"></textarea>
+                    `;
+                }
+
+                if (activity.type !== 'tutorial') {
+                    activityHtml += `<div id="facit-${activityId}" class="facit-container mt-4"></div>`;
+                }
+                
+                activityHtml += `</div>`;
+                return activityHtml;
+            }));
+
+            const backButtonAction = collectionName === 'quizzes' ? showQuizList : showMyProgress;
+            contentContainer.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900">${quiz.title}</h2>
+                    <button id="backBtn" class="text-sm text-indigo-600 hover:underline">&larr; Tillbaka</button>
+                </div>
+                <form id="quizSubmissionForm">
+                    ${formContent.join('')}
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg">Lämna in prov</button>
+                </form>
+            `;
+            document.getElementById('backBtn').addEventListener('click', () => backButtonAction());
+            document.getElementById('quizSubmissionForm').addEventListener('submit', (e) => handleQuizSubmit(e, quiz));
+        }
+
+        window.addEventListener('message', event => {
+            if (event.data?.type === 'simulationReady') {
+                document.querySelectorAll('iframe').forEach(iframe => {
+                    if (iframe.contentWindow === event.source) {
+                        const activityId = iframe.dataset.activityId;
+                        iframe.contentWindow.postMessage({ type: 'initSimulation', activityId: activityId }, '*');
+                    }
+                });
+            }
+            if (event.data?.type === 'simulationAnswer') {
+                const form = document.getElementById('quizSubmissionForm');
+                if (form) {
+                    const textarea = form.querySelector(`textarea[data-activity-id="${event.data.activityId}"]`);
+                    if (textarea) {
+                        textarea.value = event.data.answerText;
+                        const iframe = form.querySelector(`iframe[data-activity-id="${event.data.activityId}"]`);
+                        if(iframe) iframe.style.borderColor = '#10B981';
+                    }
+                }
+            }
+            if (event.data?.type === 'iframeResize') {
+                const iframes = document.querySelectorAll('#contentContainer iframe');
+                for (const iframe of iframes) {
+                    if (iframe.contentWindow === event.source) {
+                        iframe.style.height = `${event.data.height}px`;
+                        break; 
+                    }
+                }
+            }
+        });
+
+        async function handleQuizSubmit(e, quiz) {
+            e.preventDefault();
+            const form = e.target;
+            
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Inlämnat...';
+            submitButton.classList.add('bg-gray-400', 'hover:bg-gray-400');
+            submitButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+
+            form.querySelectorAll('textarea').forEach(ta => ta.disabled = true);
+            form.querySelectorAll('iframe').forEach(iframe => iframe.classList.add('disabled'));
+
+            const answers = Array.from(form.querySelectorAll('textarea[name="answer"]')).map(ta => ({
+                activityId: ta.dataset.activityId,
+                answerText: ta.value
+            }));
+
+            try {
+                addDoc(collection(db, "quizSubmissions"), {
+                    quizId: quiz.id,
+                    quizTitle: quiz.title,
+                    studentUid: currentUser.uid,
+                    studentName: currentUser.displayName || currentUser.email,
+                    answers: answers.map(a => ({ ...a, status: 'pending_assessment', aiAssessment: null })),
+                    status: 'pending_assessment',
+                    submittedAt: serverTimestamp()
+                });
+            } catch(error) {
+                console.error("Submission Error:", error);
+                alert(`Ett fel uppstod när ditt svar skulle sparas: ${error.message}`);
+            }
+
+            displayIndividualResults(answers);
+        }
+
+        async function displayIndividualResults(studentAnswers) {
+            for (const answer of studentAnswers) {
+                const facitContainer = document.getElementById(`facit-${answer.activityId}`);
+                if (!facitContainer) continue;
+
+                facitContainer.innerHTML = '<p class="text-gray-500">Hämtar facit...</p>';
+                facitContainer.style.display = 'block';
+
+                const activity = activitiesMap.get(answer.activityId) || { facit: 'Facit saknas.' };
+
+                facitContainer.innerHTML = `
+                    <div class="space-y-4 pt-4 mt-4 border-t">
+                        <div>
+                            <p class="font-bold text-gray-700">Facit:</p>
+                            <div class="facit-content p-3 bg-green-50 text-green-900 rounded-md mt-1"></div>
+                        </div>
+                    </div>
+                `;
+                
+                const facitContentDiv = facitContainer.querySelector('.facit-content');
+                try {
+                    katex.render(activity.facit || 'Facit ej tillgängligt.', facitContentDiv, {
+                        throwOnError: false
+                    });
+                } catch (e) {
+                    console.error("KaTeX rendering error:", e);
+                    facitContentDiv.textContent = activity.facit || 'Facit ej tillgängligt.';
+                }
+            }
+        }
+        
+        async function loadTailoredQuizzes() {
+            const container = document.getElementById('tailoredQuizzesContainer');
+            if(!container) return;
+            const q = query(collection(db, "tailoredQuizzes"), where("studentUid", "==", currentUser.uid), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+            if(querySnapshot.empty) { 
+                container.innerHTML = '<p class="text-center text-gray-500">Inga personliga övningsprov har tilldelats dig ännu.</p>'; 
+                return; 
+            }
+            const listHtml = querySnapshot.docs.map(doc => {
+                 const quiz = doc.data();
+                 return `<div class="p-4 border-b last:border-b-0 hover:bg-gray-50 flex justify-between items-center"><div><h3 class="text-md font-semibold text-gray-800">${quiz.title}</h3></div><button class="take-quiz-btn bg-purple-500 hover:bg-purple-600 text-white font-bold py-1 px-3 rounded-lg text-sm" data-quiz-id="${doc.id}" data-collection="tailoredQuizzes">Starta övning</button></div>`;
+            }).join('');
+            container.innerHTML = `<h3 class="text-xl font-bold text-gray-800 mb-4 mt-6">Dina övningsprov</h3><div class="space-y-2 border rounded-md">${listHtml}</div>`;
+             document.querySelectorAll('.take-quiz-btn').forEach(button => {
+                button.addEventListener('click', (e) => loadAndDisplayQuiz(e.target.dataset.quizId, e.target.dataset.collection));
+            });
+        }
+        
+        // --- Auth Listeners ---
+        loginForm.addEventListener('submit', async e => { 
+            e.preventDefault(); 
+            try { 
+                await signInWithEmailAndPassword(auth, loginForm.loginEmail.value, loginForm.loginPassword.value); 
+                authMessageArea.textContent = '';
+            } catch (error) { 
+                authMessageArea.textContent = "Fel e-post eller lösenord. Försök igen."; 
+            }
+        });
+        logoutButton.addEventListener('click', () => signOut(auth));
+
+    </script>
 </body>
 </html>

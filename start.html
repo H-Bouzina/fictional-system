@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Till Matteboken</title>
+    <style>
+        /* Grundläggande stil för sidan */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        /* Behållare för knappen, ser till att den är centrerad */
+        .container {
+            padding: 40px 50px;
+            border-radius: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+        /* Stil för startknappen */
+        .seb-button {
+            display: inline-block;
+            padding: 18px 35px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+        }
+        /* Effekt när muspekaren är över knappen */
+        .seb-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 
+            Detta är länken som kommer att starta SEB.
+            'href' attributet sätts dynamiskt av JavaScript-koden nedan
+            för att säkerställa att länken alltid är korrekt.
+        -->
+        <a id="sebLink" href="#" class="seb-button">Till matteboken</a>
+    </div>
+
+    <script>
+        // Detta skript körs när sidan har laddats klart.
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hitta knappen i dokumentet via dess id.
+            const sebButton = document.getElementById('sebLink');
+
+            // Hämta den fullständiga URL:en till den här HTML-sidan.
+            const currentPageUrl = window.location.href;
+
+            // Skapa den fullständiga sökvägen till .seb-filen.
+            // Vi antar att 'config.seb' ligger i samma mapp som denna HTML-fil.
+            // Byt 'config.seb' om din fil har ett annat namn.
+            const sebFileUrl = currentPageUrl.substring(0, currentPageUrl.lastIndexOf('/') + 1) + 'config.seb';
+
+            // Skapa den speciella SEB-länken.
+            // Den använder 'sebs://' för säkra anslutningar (https) och 'seb://' för vanliga (http).
+            // Den tar bort 'https://' eller 'http://' från början av URL:en, eftersom SEB-protokollet ersätter det.
+            let sebProtocol = 'sebs://';
+            let urlForSeb = sebFileUrl;
+
+            if (urlForSeb.startsWith('https://')) {
+                urlForSeb = urlForSeb.substring('https://'.length);
+            } else if (urlForSeb.startsWith('http://')) {
+                sebProtocol = 'seb://';
+                urlForSeb = urlForSeb.substring('http://'.length);
+            }
+
+            // Sätt knappens 'href' till den färdiga SEB-länken.
+            sebButton.href = sebProtocol + urlForSeb;
+        });
+    </script>
+
+</body>
+</html>
